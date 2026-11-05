@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sana’s Birthday Surprise</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="A little birthday surprise for Sana, from Asad.">
+<meta name="robots" content="noindex, nofollow, noimageindex">
+<meta name="theme-color" content="#F6ECDA">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 56S8 41 8 24a12 12 0 0 1 24-4 12 12 0 0 1 24 4c0 17-24 32-24 32z' fill='%23B3122E'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/fonts.css">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+<!-- Background layers: warm lights dim for the candles, dusk for the finale -->
+<div class="ambient ambient--dim" aria-hidden="true"></div>
+<div class="ambient ambient--dusk" aria-hidden="true"><div class="ambient__lights"></div></div>
+
+<header class="topbar" id="topbar">
+  <button class="tag-btn" id="nav-gifts" type="button" hidden>
+    <svg class="tag-btn__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9zM3 7h18v4H3zM12 7v14M12 7c-1.5-3-5-4-6-2s2 2 6 2zm0 0c1.5-3 5-4 6-2s-2 2-6 2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <span data-c="ui.giftsButton"></span>
+  </button>
+  <div class="topbar__right">
+    <div class="music" id="music" hidden>
+      <button class="round-btn" id="music-toggle" type="button" aria-pressed="false">
+        <span class="music__icon" aria-hidden="true">♪</span><span class="music__label" id="music-label"></span>
+      </button>
+      <button class="round-btn" id="music-mute" type="button" aria-pressed="false" hidden>
+        <span aria-hidden="true" id="music-mute-icon">🔊</span><span class="sr-only" id="music-mute-label"></span>
+      </button>
+    </div>
+    <p class="secrets-tag" id="secrets-tag" role="status">
+      <span class="secrets-tag__star" aria-hidden="true">✦</span>
+      <span data-c="ui.secretsLabel"></span>&nbsp;<b id="secrets-count">0</b>/<span id="secrets-total">5</span>
+    </p>
+    <button class="round-btn round-btn--hint" id="hint-btn" type="button" aria-haspopup="dialog">
+      <span aria-hidden="true">💡</span><span data-c="ui.hintButton"></span>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============================== 2 · OPENING ============================== -->
+  <section class="screen screen--opening" id="screen-opening" data-screen="opening" aria-labelledby="opening-title">
+    <div class="opening" id="opening">
+      <h1 class="opening__above" id="opening-title" data-c="opening.above"></h1>
+
+      <article class="reveal-card paper" id="reveal-card" aria-labelledby="reveal-title" hidden>
+        <img class="tape tape--top" src="assets/illustrations/washi-tape.svg" alt="" aria-hidden="true">
+        <div class="reveal-card__grid">
+          <figure class="polaroid polaroid--reveal reveal-step" style="--tilt:-4deg">
+            <img class="polaroid__img" data-photo="opening.reveal.photo" alt="">
+          </figure>
+          <div class="reveal-card__text">
+            <h2 class="reveal-card__title reveal-step" id="reveal-title" tabindex="-1" data-c="opening.reveal.title"></h2>
+            <p class="reveal-card__date reveal-step" data-c="opening.reveal.date"></p>
+          </div>
+        </div>
+        <div class="bubble-row reveal-step reveal-step--bubble">
+          <img class="bubble-row__bear" src="assets/illustrations/bear-peek.svg" alt="" aria-hidden="true">
+          <p class="speech-bubble" data-c="opening.reveal.bubble"></p>
+        </div>
+        <p class="reveal-card__line reveal-step" data-c="opening.reveal.line"></p>
+        <div class="reveal-step">
+          <button class="btn btn--primary" id="to-gifts" type="button" data-c="opening.reveal.button"></button>
+        </div>
+      </article>
+
+      <div class="opening__stage" id="opening-stage">
+        <figure class="peek peek--left" aria-hidden="true"><img data-photo="opening.peekPhotos.0" alt=""></figure>
+        <figure class="peek peek--right" aria-hidden="true"><img data-photo="opening.peekPhotos.1" alt=""></figure>
+        <div class="envelope" id="envelope">
+          <div class="envelope__back"></div>
+          <div class="envelope__card" id="envelope-card" aria-hidden="true">
+            <span class="envelope__card-stars">✦ ✧ ✦</span>
+            <span class="envelope__card-text" data-c="opening.cardPeek"></span>
+          </div>
+          <svg class="envelope__pocket" viewBox="0 0 400 250" preserveAspectRatio="none" aria-hidden="true">
+            <path class="pocket__left" d="M0 4 Q0 0 4 1 L196 132 Q200 135 196 138 L4 249 Q0 250 0 246 Z"/>
+            <path class="pocket__right" d="M400 4 Q400 0 396 1 L204 132 Q200 135 204 138 L396 249 Q400 250 400 246 Z"/>
+            <path class="pocket__bottom" d="M2 250 L194 116 Q200 112 206 116 L398 250 Z"/>
+          </svg>
+          <p class="envelope__address" data-c="opening.envelope"></p>
+          <span class="envelope__stamp" aria-hidden="true"><img data-photo="opening.stampPhoto" alt=""></span>
+          <div class="envelope__flap" id="envelope-flap" aria-hidden="true">
+            <div class="envelope__flap-face envelope__flap-face--out"></div>
+            <div class="envelope__flap-face envelope__flap-face--in"></div>
+          </div>
+          <div class="envelope__seal" id="envelope-seal" aria-hidden="true"><span class="svg-slot" data-svg="seal-wax"></span></div>
+        </div>
+        <button class="secret secret--star" type="button" data-secret="1">
+          <img src="assets/illustrations/doodle-sparkle.svg" alt="">
+        </button>
+      </div>
+
+      <p class="opening__below" id="opening-below" data-c="opening.below"></p>
+      <div class="opening__cta" id="opening-cta">
+        <button class="btn btn--primary btn--big" id="open-envelope" type="button" data-c="opening.openButton"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 3 · GIFTS ============================== -->
+  <section class="screen screen--gifts" id="screen-gifts" data-screen="gifts" aria-labelledby="gifts-title" hidden>
+    <div class="wrap">
+      <header class="section-head section-head--center">
+        <img class="hub-bear" src="assets/illustrations/bear-wave.svg" alt="" aria-hidden="true">
+        <h2 class="section-title" id="gifts-title" tabindex="-1" data-c="gifts.heading"></h2>
+        <p class="lede" data-c="gifts.intro"></p>
+        <p class="hand-note"><img class="hand-note__doodle" src="assets/illustrations/doodle-arrow.svg" alt="" aria-hidden="true"><span data-c="gifts.hint"></span></p>
+      </header>
+      <ul class="gifts" role="list">
+        <li class="gifts__item">
+          <button class="gift" type="button" data-gift="memories">
+            <span class="gift__art"><span class="svg-slot" data-svg="gift-camera"></span><span class="gift__sparkles" aria-hidden="true"></span></span>
+            <span class="gift__tag"><span class="gift__label" data-c="gifts.items.memories.label"></span></span>
+            <span class="gift__note" data-c="gifts.items.memories.note"></span>
+            <span class="gift__opened" data-c="gifts.openedLabel"></span>
+          </button>
+        </li>
+        <li class="gifts__item">
+          <button class="gift" type="button" data-gift="cake">
+            <span class="gift__art"><span class="svg-slot" data-svg="gift-cake"></span><span class="gift__sparkles" aria-hidden="true"></span></span>
+            <span class="gift__tag"><span class="gift__label" data-c="gifts.items.cake.label"></span></span>
+            <span class="gift__note" data-c="gifts.items.cake.note"></span>
+            <span class="gift__opened" data-c="gifts.openedLabel"></span>
+          </button>
+        </li>
+        <li class="gifts__item">
+          <button class="gift" type="button" data-gift="letter">
+            <span class="gift__art"><span class="svg-slot" data-svg="gift-envelope"></span><span class="gift__sparkles" aria-hidden="true"></span></span>
+            <span class="gift__tag"><span class="gift__label" data-c="gifts.items.letter.label"></span></span>
+            <span class="gift__note" data-c="gifts.items.letter.note"></span>
+            <span class="gift__opened" data-c="gifts.openedLabel"></span>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================== 4 · MEMORIES ============================== -->
+  <section class="screen screen--memories" id="screen-memories" data-screen="memories" aria-labelledby="memories-title" hidden>
+    <div class="wrap wrap--wide">
+      <div class="sheet paper">
+        <header class="section-head">
+          <img class="sheet__doodle sheet__doodle--stars" src="assets/illustrations/doodle-stars.svg" alt="" aria-hidden="true">
+          <h2 class="section-title section-title--memories" id="memories-title" tabindex="-1" data-c="memories.heading"></h2>
+          <img class="underline" src="assets/illustrations/doodle-underline.svg" alt="" aria-hidden="true">
+          <p class="lede" data-c="memories.intro"></p>
+          <p class="hand-note hand-note--small" data-c="memories.tapHint"></p>
+        </header>
+        <div class="scrapbook" id="scrapbook"></div>
+
+        <div class="reel" id="reel">
+          <h3 class="reel__title"><span data-c="memories.reelHeading"></span></h3>
+          <p class="reel__hint" data-c="memories.reelHint"></p>
+          <div class="reel__strip" id="reel-strip" role="list"></div>
+        </div>
+      </div>
+      <nav class="section-nav" aria-label="Where next">
+        <button class="btn btn--quiet" type="button" data-go="gifts" data-c="ui.backToGifts"></button>
+        <button class="btn btn--primary" type="button" data-go="fun" data-c="memories.next"></button>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ============================== 5 · FUN ============================== -->
+  <section class="screen screen--fun" id="screen-fun" data-screen="fun" aria-labelledby="fun-title" hidden>
+    <div class="wrap">
+      <p class="eyebrow" data-c="fun.eyebrow"></p>
+      <div class="notebook" id="quiz">
+        <div class="notebook__holes" aria-hidden="true"><span></span><span></span><span></span></div>
+        <h2 class="notebook__title" id="fun-title" tabindex="-1" data-c="fun.title"></h2>
+        <p class="notebook__question" data-c="fun.question"></p>
+        <div class="answers" id="answers">
+          <button class="btn btn--primary answer" type="button" data-answer="yes" data-c="fun.answerYes"></button>
+          <button class="btn btn--paper answer" type="button" data-answer="think" data-c="fun.answerThink"></button>
+        </div>
+        <p class="notebook__response" id="quiz-response" aria-live="polite"></p>
+      </div>
+
+      <div class="certificate-wrap" id="certificate-wrap" hidden>
+        <img class="certificate__bear" src="assets/illustrations/bear-grad.svg" alt="" aria-hidden="true">
+        <article class="certificate" id="certificate" aria-labelledby="certificate-title">
+          <div class="certificate__inner">
+            <img class="certificate__bow" src="assets/illustrations/bow-ribbon.svg" alt="" aria-hidden="true">
+            <h3 class="certificate__title" id="certificate-title" tabindex="-1" data-c="fun.certificate.title"></h3>
+            <div class="certificate__body">
+              <figure class="certificate__photo"><img data-photo="fun.certificate.photo" alt=""></figure>
+              <p class="certificate__presented" data-c="fun.certificate.presented"></p>
+            </div>
+            <div class="certificate__signs">
+              <p class="certificate__sign"><span class="certificate__sign-name" data-c="names.me"></span><span class="certificate__sign-label" data-c="fun.certificate.signatureLabel"></span></p>
+              <p class="certificate__sign"><span class="certificate__sign-name" data-c="date"></span><span class="certificate__sign-label" data-c="fun.certificate.dateLabel"></span></p>
+            </div>
+            <p class="certificate__small" data-c="fun.certificate.smallPrint"></p>
+            <button class="secret secret--stamp" type="button" data-secret="3">
+              <img src="assets/illustrations/stamp-gold.svg" alt="">
+            </button>
+          </div>
+        </article>
+        <nav class="section-nav" aria-label="Where next">
+          <button class="btn btn--quiet" type="button" data-go="gifts" data-c="ui.backToGifts"></button>
+          <button class="btn btn--primary" type="button" id="fun-continue"></button>
+        </nav>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 6 · CAKE ============================== -->
+  <section class="screen screen--cake" id="screen-cake" data-screen="cake" aria-labelledby="cake-title" hidden>
+    <div class="wrap">
+      <header class="section-head section-head--center">
+        <h2 class="section-title" id="cake-title" tabindex="-1" data-c="cake.heading"></h2>
+        <p class="lede" data-c="cake.text"></p>
+      </header>
+      <div class="cake-scene">
+        <figure class="polaroid polaroid--cake" style="--tilt:5deg">
+          <img class="polaroid__img" data-photo="cake.photo" alt="">
+          <figcaption class="polaroid__caption" data-c="cake.photoCaption"></figcaption>
+          <img class="tape tape--corner" src="assets/illustrations/washi-tape-gold.svg" alt="" aria-hidden="true">
+        </figure>
+        <div class="cake" id="cake">
+          <span class="svg-slot" data-svg="cake"></span>
+          <button class="candle-btn" type="button" data-candle="0" style="--x:35.6%"></button>
+          <button class="candle-btn" type="button" data-candle="1" style="--x:43.3%"></button>
+          <button class="candle-btn" type="button" data-candle="2" style="--x:56.7%"></button>
+          <button class="candle-btn" type="button" data-candle="3" style="--x:64.4%"></button>
+          <button class="secret secret--cherry" type="button" data-secret="4"></button>
+        </div>
+      </div>
+      <div class="cake-actions" id="cake-actions">
+        <button class="btn btn--primary btn--big" id="blow-candles" type="button" data-c="cake.button"></button>
+        <p class="hand-note hand-note--small" data-c="cake.tapHint"></p>
+      </div>
+      <div class="wish" id="wish" hidden>
+        <p class="wish__text" id="wish-text" tabindex="-1" data-c="cake.wish"></p>
+        <p class="wish__tease" data-c="cake.wishTease"></p>
+        <nav class="section-nav" aria-label="Where next">
+          <button class="btn btn--quiet" type="button" data-go="gifts" data-c="ui.backToGifts"></button>
+          <button class="btn btn--primary" type="button" data-go="letter" data-c="cake.next"></button>
+        </nav>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 8 · LETTER ============================== -->
+  <section class="screen screen--letter" id="screen-letter" data-screen="letter" aria-labelledby="letter-title" hidden>
+    <div class="wrap wrap--letter">
+      <div class="letter-scene" id="letter-scene">
+        <div class="letter-envelope" id="letter-envelope" aria-hidden="true">
+          <div class="letter-envelope__back"></div>
+          <div class="letter-envelope__paper"></div>
+          <svg class="letter-envelope__pocket" viewBox="0 0 400 250" preserveAspectRatio="none">
+            <path class="pocket__left" d="M0 4 Q0 0 4 1 L196 132 Q200 135 196 138 L4 249 Q0 250 0 246 Z"/>
+            <path class="pocket__right" d="M400 4 Q400 0 396 1 L204 132 Q200 135 204 138 L396 249 Q400 250 400 246 Z"/>
+            <path class="pocket__bottom" d="M2 250 L194 116 Q200 112 206 116 L398 250 Z"/>
+          </svg>
+          <p class="letter-envelope__label" data-c="letter.envelopeLabel"></p>
+          <div class="letter-envelope__flap"><div class="envelope__flap-face envelope__flap-face--out"></div><div class="envelope__flap-face envelope__flap-face--in"></div></div>
+        </div>
+
+        <div class="letter-layout" id="letter-layout">
+          <figure class="polaroid polaroid--letter" style="--tilt:-3deg">
+            <img class="polaroid__img" data-photo="letter.photo" alt="">
+            <figcaption class="polaroid__caption" data-c="letter.photoCaption"></figcaption>
+            <img class="tape tape--top" src="assets/illustrations/washi-tape.svg" alt="" aria-hidden="true">
+          </figure>
+          <article class="letter-paper" aria-labelledby="letter-title">
+            <h2 class="letter-paper__title" id="letter-title" tabindex="-1" data-c="letter.title"></h2>
+            <div class="letter-paper__body" id="letter-body"></div>
+            <p class="letter-paper__signature" data-c="letter.signature"></p>
+          </article>
+        </div>
+
+        <div class="letter-seal">
+          <span class="letter-seal__twine" aria-hidden="true"></span>
+          <button class="secret secret--seal" type="button" data-secret="5">
+            <span class="svg-slot" data-svg="seal-wax"></span>
+          </button>
+        </div>
+
+        <div class="letter-end">
+          <p class="letter-end__line" data-c="letter.endLine"></p>
+          <button class="btn btn--primary btn--big" type="button" id="to-final" data-c="letter.endButton"></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 9 · FINAL ============================== -->
+  <section class="screen screen--final" id="screen-final" data-screen="final" aria-labelledby="final-title" hidden>
+    <div class="final">
+      <div class="garland-group" id="garland-a" aria-hidden="true"></div>
+      <div class="final__lines" id="final-lines"></div>
+      <div class="final__wish" id="final-wish">
+        <h2 class="final__title" id="final-title" tabindex="-1" data-c="final.title"></h2>
+        <p class="final__text" data-c="final.wish"></p>
+        <p class="final__signoff" data-c="final.signoff"></p>
+      </div>
+      <div class="final__bubble" id="final-bubble">
+        <img class="final__bubble-bear" src="assets/illustrations/bear-duo.svg" alt="" aria-hidden="true">
+        <p class="speech-bubble speech-bubble--final" data-c="final.bubble"></p>
+      </div>
+      <div class="garland-group garland-group--b" id="garland-b" aria-hidden="true"></div>
+      <nav class="final__actions" id="final-actions" aria-label="What next">
+        <button class="btn btn--paper" type="button" id="memories-again" data-c="final.againButton"></button>
+        <button class="btn btn--primary" type="button" id="replay" data-c="final.replayButton"></button>
+      </nav>
+    </div>
+  </section>
+</main>
+
+<!-- ============================== DIALOGS ============================== -->
+<dialog class="lightbox" id="lightbox" aria-labelledby="lightbox-caption">
+  <div class="lightbox__frame">
+    <figure class="lightbox__polaroid">
+      <div class="lightbox__media" id="lightbox-media"></div>
+      <figcaption class="lightbox__caption" id="lightbox-caption"></figcaption>
+    </figure>
+    <p class="lightbox__count" id="lightbox-count"></p>
+    <button class="lightbox__nav lightbox__nav--prev round-btn" id="lightbox-prev" type="button"><span aria-hidden="true">‹</span><span class="sr-only" data-c="ui.previous"></span></button>
+    <button class="lightbox__nav lightbox__nav--next round-btn" id="lightbox-next" type="button"><span aria-hidden="true">›</span><span class="sr-only" data-c="ui.next"></span></button>
+    <button class="lightbox__close round-btn" id="lightbox-close" type="button"><span aria-hidden="true">✕</span><span class="sr-only" data-c="ui.close"></span></button>
+  </div>
+</dialog>
+
+<dialog class="note-dialog" id="note-dialog" aria-labelledby="note-label">
+  <div class="note-card paper">
+    <img class="tape tape--top" src="assets/illustrations/washi-tape-gold.svg" alt="" aria-hidden="true">
+    <p class="note-card__label" id="note-label"></p>
+    <figure class="polaroid polaroid--note" style="--tilt:3deg"><img class="polaroid__img" id="note-photo" alt=""></figure>
+    <p class="note-card__text" id="note-text"></p>
+    <img class="note-card__heart" src="assets/illustrations/doodle-heart.svg" alt="" aria-hidden="true">
+    <button class="btn btn--primary" type="button" data-close data-c="ui.keepExploring"></button>
+  </div>
+</dialog>
+
+<dialog class="note-dialog note-dialog--hints" id="hints-dialog" aria-labelledby="hints-title">
+  <div class="note-card paper">
+    <h2 class="note-card__title" id="hints-title" data-c="secrets.hintsTitle"></h2>
+    <p class="note-card__intro" id="hints-intro"></p>
+    <ol class="hints" id="hints-list"></ol>
+    <div class="note-card__actions">
+      <button class="btn btn--paper" type="button" id="hints-bonus" hidden data-c="secrets.readBonus"></button>
+      <button class="btn btn--primary" type="button" data-close data-c="ui.close"></button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="note-dialog note-dialog--bonus" id="bonus-dialog" aria-labelledby="bonus-line-0">
+  <div class="note-card note-card--bonus paper">
+    <img class="note-card__sticker" src="assets/illustrations/bear-sticker-face.svg" alt="" aria-hidden="true">
+    <figure class="polaroid polaroid--note" style="--tilt:-3deg"><img class="polaroid__img" data-photo="secrets.bonus.photo" alt=""></figure>
+    <div class="bonus-lines" id="bonus-lines"></div>
+    <button class="btn btn--primary" type="button" data-close data-c="ui.close"></button>
+  </div>
+</dialog>
+
+<canvas class="fx" id="fx" aria-hidden="true"></canvas>
+<p class="sr-only" id="announcer" aria-live="polite"></p>
+<noscript><p class="noscript">This birthday surprise needs JavaScript turned on. 🎂</p></noscript>
+
+<!-- ============================== TEMPLATES ============================== -->
+<template id="tpl-polaroid">
+  <figure class="polaroid polaroid--scrap">
+    <div class="polaroid__flipper">
+      <div class="polaroid__face polaroid__face--front">
+        <button class="polaroid__open" type="button"><img class="polaroid__img" alt="" loading="lazy" decoding="async"></button>
+        <figcaption class="polaroid__caption"></figcaption>
+      </div>
+      <div class="polaroid__face polaroid__face--back">
+        <p class="polaroid__back-text"></p>
+        <img class="polaroid__back-heart" src="assets/illustrations/doodle-heart.svg" alt="" aria-hidden="true">
+      </div>
+    </div>
+    <img class="tape tape--top" alt="" aria-hidden="true">
+  </figure>
+</template>
+
+<script src="assets/js/content.js"></script>
+<script src="assets/js/illustrations.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

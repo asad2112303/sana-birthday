@@ -1,0 +1,5 @@
+# Original WhatsApp exports: the site uses the copies in assets/, not these
+WhatsApp *
+
+# macOS
+.DS_Store
