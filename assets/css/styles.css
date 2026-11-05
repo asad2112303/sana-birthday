@@ -651,11 +651,12 @@ main {
 .gift.is-unwrapping .gift__lid { animation: lidOff .7s .28s var(--ease-spring) forwards; }
 .gift.is-unwrapping .gift__item { animation: itemUp .8s .55s var(--ease-spring) forwards; }
 .gift.is-opened .gift__bow, .gift.is-opened .gift__ribbon { opacity: 0; }
-.gift.is-opened .gift__lid { transform: translate(28px, -70px) rotate(14deg); }
+/* the lid pops up and off to the right, clear of whatever rose out of the box */
+.gift.is-opened .gift__lid { transform: translate(40px, -118px) rotate(8deg); }
 .gift.is-opened .gift__item { transform: translateY(-104px); }
 @keyframes bowPop { 0% { transform: none; } 30% { transform: scale(1.25); } 100% { transform: translate(-30px, -80px) rotate(-40deg) scale(.4); opacity: 0; } }
 @keyframes ribbonOff { to { transform: scaleY(.1); opacity: 0; } }
-@keyframes lidOff { 0% { transform: none; } 100% { transform: translate(28px, -70px) rotate(14deg); } }
+@keyframes lidOff { 0% { transform: none; } 100% { transform: translate(40px, -118px) rotate(8deg); } }
 @keyframes itemUp { 0% { transform: none; } 100% { transform: translateY(-104px); } }
 @keyframes giftWiggle { 0%, 84%, 100% { transform: none; } 87% { transform: rotate(-4deg); } 90% { transform: rotate(4deg); } 93% { transform: rotate(-3deg); } 96% { transform: rotate(2deg); } }
 @keyframes giftHop { 0% { transform: none; } 40% { transform: translateY(-8px) rotate(-2deg); } 100% { transform: none; } }
