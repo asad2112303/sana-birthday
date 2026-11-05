@@ -8,12 +8,20 @@ Double-click **`index.html`**. It runs straight from this folder, with no intern
 
 ## Share it with Sana
 
-Upload this whole folder to any static host and send her the link. The quickest option is
-[Netlify Drop](https://app.netlify.com/drop): drag the folder onto the page and you get a link
-in a few seconds.
+The site is live on GitHub Pages: **https://asad2112303.github.io/sana-birthday/**
 
-The original WhatsApp files in the top of this folder are not used by the site, so you can leave
-them out of the upload. Everything the site needs is in `index.html` and `assets/`.
+Anyone with the link can open it, and the page asks search engines not to list it.
+
+To update the live site, commit your change and push to `main`:
+
+```bash
+git add -A
+git commit -m "Describe the change"
+git push
+```
+
+GitHub republishes it within a minute or two. The original WhatsApp files in this folder are
+not part of the repo (see `.gitignore`); the site only uses the copies in `assets/`.
 
 ## Change words, names, captions or photos
 
