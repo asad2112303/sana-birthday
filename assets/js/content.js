@@ -71,10 +71,10 @@
     { src: "assets/videos/lab-day.mp4", poster: "assets/videos/lab-day.jpg", width: 480, height: 848, caption: "Lab days." },
     { src: "assets/videos/road-trip.mp4", poster: "assets/videos/road-trip.jpg", width: 848, height: 480, caption: "Road trips and car selfies." },
     { src: "assets/videos/night-ride.mp4", poster: "assets/videos/night-ride.jpg", width: 480, height: 848, caption: "Late-night rides with the whole group." },
-    { src: "assets/videos/group-shoot.mp4", poster: "assets/videos/group-shoot.jpg", width: 480, height: 848, caption: "Group photo mode: activated." },
+    { src: "assets/videos/group-shoot.mp4", poster: "assets/videos/group-shoot.jpg", width: 480, height: 848, posterWidth: 480, posterHeight: 410, caption: "Group photo mode: activated." },
     { src: "assets/videos/no-explanation.mp4", poster: "assets/videos/no-explanation.jpg", width: 506, height: 900, caption: "No explanation will be provided. 😂" },
     { src: "assets/videos/three-seconds.mp4", poster: "assets/videos/three-seconds.jpg", width: 506, height: 900, caption: "Three seconds of pure nonsense." },
-    { src: "assets/videos/official-photo.mp4", poster: "assets/videos/official-photo.jpg", width: 415, height: 900, caption: "Very serious. Very official. 😌" },
+    { src: "assets/videos/official-photo.mp4", poster: "assets/videos/official-photo.jpg", width: 576, height: 1248, posterWidth: 573, posterHeight: 852, caption: "Very serious. Very official. 😌" },
   ];
 
   /* ---- Optional music ----------------------------------------------------- */
@@ -94,6 +94,7 @@
     },
 
     ui: {
+      pageHeading: `A birthday surprise for ${FRIEND}`,
       backToGifts: "Back to the gifts",
       giftsButton: "Gifts",
       secretsLabel: "Little secrets found:",
@@ -222,13 +223,12 @@
           label: "The gold stamp",
           note: `One thing you might not know, even though ‘${DIALOGUE}’: I appreciate your friendship more than I probably say.`,
           hint: "Every official certificate has a gold stamp. Press it.",
-          lockedHint: "First, answer a very important question.",
         },
         {
           id: 4, where: "cake", photo: "pinkAndYellow",
           label: "The cherry on the cake",
           note: "My quiet wish for you: that the next chapter gives you plenty of reasons to smile.",
-          hint: "The cherry on top is not just for decoration.",
+          hint: "Every cake needs a cherry on top. This one is hiding something.",
         },
         {
           id: 5, where: "letter", photo: "thumbsUpOutdoors",
@@ -242,6 +242,10 @@
       hintsIntro: "Found {found} of 5. Here’s where to look:",
       hintsAllFound: "You found all five.",
       takeMeThere: "Take me there",
+      lockedOpen: "First, open the envelope.",
+      lockedQuiz: "First, answer a very important question.",
+      takeMeToEnvelope: "Take me to the envelope",
+      takeMeToQuestion: "Take me to the question",
       readAgain: "Read it again",
       readBonus: "Read the bonus message",
       bonus: {
@@ -275,13 +279,13 @@
         `Happy Birthday, ${FRIEND}. You’ll always have a best friend and an unofficial brother in me.`,
       ],
       signature: `— ${ME}`,
-      sealLabel: "A wax seal",
       endLine: "One last memory. One last wish.",
       endButton: "Okay, show me ✨",
     },
 
     /* 9 · Final surprise -------------------------------------------------------------- */
     final: {
+      srHeading: "One last memory, one last wish", // read by screen readers only
       lines: [
         "We met at university.",
         "We spent so much time together.",

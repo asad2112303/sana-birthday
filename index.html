@@ -21,7 +21,7 @@
 <header class="topbar" id="topbar">
   <button class="tag-btn" id="nav-gifts" type="button" hidden>
     <svg class="tag-btn__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9zM3 7h18v4H3zM12 7v14M12 7c-1.5-3-5-4-6-2s2 2 6 2zm0 0c1.5-3 5-4 6-2s-2 2-6 2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
-    <span data-c="ui.giftsButton"></span>
+    <span class="topbar__label" data-c="ui.giftsButton"></span>
   </button>
   <div class="topbar__right">
     <div class="music" id="music" hidden>
@@ -34,20 +34,22 @@
     </div>
     <p class="secrets-tag" id="secrets-tag" role="status">
       <span class="secrets-tag__star" aria-hidden="true">✦</span>
-      <span data-c="ui.secretsLabel"></span>&nbsp;<b id="secrets-count">0</b>/<span id="secrets-total">5</span>
+      <span class="secrets-tag__label topbar__label" data-c="ui.secretsLabel"></span>
+      <span class="secrets-tag__count"><b id="secrets-count">0</b>/<span id="secrets-total">5</span></span>
     </p>
     <button class="round-btn round-btn--hint" id="hint-btn" type="button" aria-haspopup="dialog">
-      <span aria-hidden="true">💡</span><span data-c="ui.hintButton"></span>
+      <span aria-hidden="true">💡</span><span class="topbar__label" data-c="ui.hintButton"></span>
     </button>
   </div>
 </header>
 
 <main id="main">
+  <h1 class="sr-only" data-c="ui.pageHeading"></h1>
 
   <!-- ============================== 2 · OPENING ============================== -->
   <section class="screen screen--opening" id="screen-opening" data-screen="opening" aria-labelledby="opening-title">
     <div class="opening" id="opening">
-      <h1 class="opening__above" id="opening-title" data-c="opening.above"></h1>
+      <p class="opening__above" id="opening-title" data-c="opening.above"></p>
 
       <article class="reveal-card paper" id="reveal-card" aria-labelledby="reveal-title" hidden>
         <img class="tape tape--top" src="assets/illustrations/washi-tape.svg" alt="" aria-hidden="true">
@@ -156,7 +158,7 @@
         <div class="scrapbook" id="scrapbook"></div>
 
         <div class="reel" id="reel">
-          <h3 class="reel__title"><span data-c="memories.reelHeading"></span></h3>
+          <h3 class="reel__title"><span aria-hidden="true">🎞️</span><span data-c="memories.reelHeading"></span></h3>
           <p class="reel__hint" data-c="memories.reelHint"></p>
           <div class="reel__strip" id="reel-strip" role="list"></div>
         </div>
@@ -220,9 +222,9 @@
       </header>
       <div class="cake-scene">
         <figure class="polaroid polaroid--cake" style="--tilt:5deg">
+          <img loading="lazy" decoding="async" class="tape tape--corner" src="assets/illustrations/washi-tape-gold.svg" alt="" aria-hidden="true">
           <img loading="lazy" decoding="async" class="polaroid__img" data-photo="cake.photo" alt="">
           <figcaption class="polaroid__caption" data-c="cake.photoCaption"></figcaption>
-          <img loading="lazy" decoding="async" class="tape tape--corner" src="assets/illustrations/washi-tape-gold.svg" alt="" aria-hidden="true">
         </figure>
         <div class="cake" id="cake">
           <span class="svg-slot" data-svg="cake"></span>
@@ -266,9 +268,9 @@
 
         <div class="letter-layout" id="letter-layout">
           <figure class="polaroid polaroid--letter" style="--tilt:-3deg">
+            <img loading="lazy" decoding="async" class="tape tape--top" src="assets/illustrations/washi-tape.svg" alt="" aria-hidden="true">
             <img loading="lazy" decoding="async" class="polaroid__img" data-photo="letter.photo" alt="">
             <figcaption class="polaroid__caption" data-c="letter.photoCaption"></figcaption>
-            <img loading="lazy" decoding="async" class="tape tape--top" src="assets/illustrations/washi-tape.svg" alt="" aria-hidden="true">
           </figure>
           <article class="letter-paper" aria-labelledby="letter-title">
             <h2 class="letter-paper__title" id="letter-title" tabindex="-1" data-c="letter.title"></h2>
@@ -295,6 +297,7 @@
   <!-- ============================== 9 · FINAL ============================== -->
   <section class="screen screen--final" id="screen-final" data-screen="final" aria-labelledby="final-title" hidden>
     <div class="final">
+      <h2 class="sr-only" id="final-start" tabindex="-1" data-c="final.srHeading"></h2>
       <div class="garland-group" id="garland-a" aria-hidden="true"></div>
       <div class="final__lines" id="final-lines"></div>
       <div class="final__wish" id="final-wish">
@@ -322,28 +325,29 @@
       <div class="lightbox__media" id="lightbox-media"></div>
       <figcaption class="lightbox__caption" id="lightbox-caption"></figcaption>
     </figure>
-    <p class="lightbox__count" id="lightbox-count"></p>
+    <p class="lightbox__count" id="lightbox-count" aria-hidden="true"></p>
+    <p class="sr-only" id="lightbox-status" aria-live="polite" aria-atomic="true"></p>
     <button class="lightbox__nav lightbox__nav--prev round-btn" id="lightbox-prev" type="button"><span aria-hidden="true">‹</span><span class="sr-only" data-c="ui.previous"></span></button>
     <button class="lightbox__nav lightbox__nav--next round-btn" id="lightbox-next" type="button"><span aria-hidden="true">›</span><span class="sr-only" data-c="ui.next"></span></button>
     <button class="lightbox__close round-btn" id="lightbox-close" type="button"><span aria-hidden="true">✕</span><span class="sr-only" data-c="ui.close"></span></button>
   </div>
 </dialog>
 
-<dialog class="note-dialog" id="note-dialog" aria-labelledby="note-label">
+<dialog class="note-dialog" id="note-dialog" aria-labelledby="note-label" aria-describedby="note-text">
   <div class="note-card paper">
     <img loading="lazy" decoding="async" class="tape tape--top" src="assets/illustrations/washi-tape-gold.svg" alt="" aria-hidden="true">
     <p class="note-card__label" id="note-label"></p>
     <figure class="polaroid polaroid--note" style="--tilt:3deg"><img loading="lazy" decoding="async" class="polaroid__img" id="note-photo" alt=""></figure>
-    <p class="note-card__text" id="note-text"></p>
+    <p class="note-card__text" id="note-text" tabindex="-1"></p>
     <img loading="lazy" decoding="async" class="note-card__heart" src="assets/illustrations/doodle-heart.svg" alt="" aria-hidden="true">
     <button class="btn btn--primary" type="button" data-close data-c="ui.keepExploring"></button>
   </div>
 </dialog>
 
-<dialog class="note-dialog note-dialog--hints" id="hints-dialog" aria-labelledby="hints-title">
+<dialog class="note-dialog note-dialog--hints" id="hints-dialog" aria-labelledby="hints-title" aria-describedby="hints-intro">
   <div class="note-card paper">
     <h2 class="note-card__title" id="hints-title" data-c="secrets.hintsTitle"></h2>
-    <p class="note-card__intro" id="hints-intro"></p>
+    <p class="note-card__intro" id="hints-intro" tabindex="-1"></p>
     <ol class="hints" id="hints-list"></ol>
     <div class="note-card__actions">
       <button class="btn btn--paper" type="button" id="hints-bonus" hidden data-c="secrets.readBonus"></button>
@@ -356,7 +360,7 @@
   <div class="note-card note-card--bonus paper">
     <img loading="lazy" decoding="async" class="note-card__sticker" src="assets/illustrations/bear-sticker-face.svg" alt="" aria-hidden="true">
     <figure class="polaroid polaroid--note" style="--tilt:-3deg"><img loading="lazy" decoding="async" class="polaroid__img" data-photo="secrets.bonus.photo" alt=""></figure>
-    <div class="bonus-lines" id="bonus-lines"></div>
+    <div class="bonus-lines" id="bonus-lines" tabindex="-1"></div>
     <button class="btn btn--primary" type="button" data-close data-c="ui.close"></button>
   </div>
 </dialog>
@@ -370,8 +374,8 @@
   <figure class="polaroid polaroid--scrap">
     <div class="polaroid__flipper">
       <div class="polaroid__face polaroid__face--front">
-        <button class="polaroid__open" type="button"><img class="polaroid__img" alt="" loading="lazy" decoding="async"></button>
-        <figcaption class="polaroid__caption"></figcaption>
+        <button class="polaroid__open" type="button"><span class="sr-only polaroid__open-label"></span><img class="polaroid__img" alt="" loading="lazy" decoding="async"></button>
+        <p class="polaroid__caption"></p>
       </div>
       <div class="polaroid__face polaroid__face--back">
         <p class="polaroid__back-text"></p>

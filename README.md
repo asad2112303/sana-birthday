@@ -36,6 +36,14 @@ Everything Sana reads is in **`assets/js/content.js`**:
 
 Save the file and refresh the page.
 
+Two bits of text live elsewhere:
+
+- The words around the certificate's gold stamp ("OFFICIALLY · KNOWS EVERYTHING") are drawn
+  into `assets/illustrations/stamp-gold.svg`.
+- The browser-tab title and the link-preview description are the `<title>` and
+  `<meta name="description">` lines near the top of `index.html`. Edit them by hand if you change
+  the names.
+
 ## Add music (optional)
 
 Put an `.mp3` in `assets/music/` and set its path in `content.js`, for example

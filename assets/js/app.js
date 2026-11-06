@@ -26,15 +26,28 @@
   const scrollBehavior = () => (reduced() ? "auto" : "smooth");
   const TOTAL_SECRETS = (C.secrets && C.secrets.total) || 5;
   const SCREENS = ["opening", "gifts", "memories", "fun", "cake", "letter", "final"];
+  /* keep a trailing emoji on the same line as the word before it */
+  const glue = (s) => String(s).replace(/[ \t]+(?=\p{Extended_Pictographic})/gu, " ");
 
-  /* timers are tracked so Replay can cancel anything still pending */
+  /* Timers are tracked so Replay can cancel anything still pending. The
+     finale keeps its own set so skipping it never cancels anything else. */
   const timers = new Set();
   function later(fn, ms) {
     const id = window.setTimeout(() => { timers.delete(id); fn(); }, reduced() ? 0 : ms);
     timers.add(id);
     return id;
   }
-  function clearTimers() { timers.forEach((id) => window.clearTimeout(id)); timers.clear(); }
+  const finalTimers = new Set();
+  function laterFinal(fn, ms) { // keeps its timing even with reduced motion (the finale fades instead of moving)
+    const id = window.setTimeout(() => { finalTimers.delete(id); fn(); }, ms);
+    finalTimers.add(id);
+    return id;
+  }
+  function clearFinalTimers() { finalTimers.forEach((id) => window.clearTimeout(id)); finalTimers.clear(); }
+  function clearTimers() { timers.forEach((id) => window.clearTimeout(id)); timers.clear(); clearFinalTimers(); }
+  /* Each screen change bumps `visit`, so a delayed step can tell whether
+     she is still on the screen that started it. */
+  let visit = 0;
 
   function announce(text) {
     const live = $("#announcer");
@@ -75,7 +88,7 @@
     if (C.meta && C.meta.pageTitle) document.title = C.meta.pageTitle;
     $$("[data-c]").forEach((node) => {
       const v = get(node.dataset.c);
-      if (typeof v === "string") node.textContent = v;
+      if (typeof v === "string") node.textContent = glue(v);
     });
     $$("img[data-photo]").forEach((img) => setPhoto(img, get(img.dataset.photo)));
     $("#secrets-total").textContent = String(TOTAL_SECRETS);
@@ -154,7 +167,8 @@
         p.rot += p.vr;
         p.alpha = p.life > p.max - 40 ? Math.max(0, (p.max - p.life) / 40) : 1;
       }
-      return p.life < p.max && p.y < H + 40 && p.alpha > 0.01;
+      // stars start invisible and fade in, so only paper is culled by alpha
+      return p.life < p.max && p.y < H + 40 && (p.kind === "star" || p.alpha > 0.01);
     }
     function draw(p) {
       ctx.save();
@@ -264,6 +278,7 @@
     if (!SCREENS.includes(name)) name = "opening";
     if (name !== "opening" && !state.opened) name = "opening";
     if ((name === "cake" || name === "letter") && !state.quizDone) {
+      // a little fun before the emotional part: the quiz comes first, once
       state.afterFun = name;
       name = "fun";
       try { location.replace("#fun"); } catch (e) { /* ignore */ }
@@ -277,6 +292,7 @@
     const prev = state.screen;
     const next = $(`#screen-${name}`);
     if (prev !== name) {
+      visit += 1;
       onLeave(prev);
       fx.fade();
       const prevEl = $(`#screen-${prev}`);
@@ -303,6 +319,20 @@
   function updateTopbar() {
     const s = state.screen;
     $("#nav-gifts").hidden = s === "gifts" || (s === "opening" && !state.visitedGifts);
+    fitTopbar();
+  }
+  /* Hide words in the top bar in stages until it fits (narrow phones, big
+     text settings). The words stay available to screen readers. */
+  const TIGHT = ["is-tight-1", "is-tight-2", "is-tight-3"];
+  function fitTopbar() {
+    const bar = $("#topbar");
+    const hint = $("#hint-btn");
+    bar.classList.remove(...TIGHT);
+    const limit = document.documentElement.clientWidth - 8;
+    for (const c of TIGHT) {
+      if (hint.getBoundingClientRect().right <= limit) break;
+      bar.classList.add(c);
+    }
   }
   function onEnter(name) {
     if (name === "gifts") enterGifts();
@@ -314,6 +344,7 @@
   }
   function onLeave(name) {
     if (name === "cake") document.body.classList.remove("is-candlelit");
+    if (name === "letter") leaveLetter();
     if (name === "final") leaveFinal();
   }
 
@@ -366,8 +397,8 @@
     card.classList.add("is-revealing");
     card.animate(
       [
-        { transformOrigin: "0 0", transform: `translate(${first.left - last.left}px, ${first.top - last.top}px) scale(${first.width / last.width}, ${first.height / last.height})`, opacity: 0.6 },
-        { transformOrigin: "0 0", transform: "none", opacity: 1 },
+        { transformOrigin: "0 0", transform: `translate(${first.left - last.left}px, ${first.top - last.top}px) scale(${first.width / last.width}, ${first.height / last.height})` },
+        { transformOrigin: "0 0", transform: "none" },
       ],
       { duration: 800, easing: "cubic-bezier(.22,.9,.3,1)" }
     );
@@ -379,9 +410,9 @@
       { duration: 800, easing: "cubic-bezier(.22,.9,.3,1)" }
     );
     fx.stars({ count: 30 });
-    later(() => card.classList.add("is-shown"), 420);
+    later(() => card.classList.add("is-shown"), 160);
     later(() => $("#reveal-title").focus({ preventScroll: true }), 700);
-    later(() => card.classList.remove("is-revealing", "is-shown"), 420 + steps.length * 260 + 900);
+    later(() => card.classList.remove("is-revealing", "is-shown"), 160 + steps.length * 260 + 900);
   }
   /* warm the cache while she reads the card, so the scrapbook never waits */
   let preloaded = false;
@@ -423,6 +454,8 @@
   function enterGifts() {
     const first = !state.visitedGifts;
     state.visitedGifts = true;
+    // a gift whose unwrap only led to the quiz goes back to being wrapped
+    $$(".gift.is-unwrapping").forEach((g) => g.classList.remove("is-unwrapping"));
     updateTopbar();
     const list = $(".gifts");
     if (first && !reduced()) {
@@ -453,15 +486,18 @@
     const target = btn.dataset.gift;
     if (btn.classList.contains("is-unwrapping")) return;
     if (state.gifts.has(target) || reduced()) {
-      markGiftOpened(target);
-      go(target);
+      go(target); // each section marks its gift as opened when she actually arrives
       return;
     }
     btn.classList.add("is-unwrapping");
     sparkleBurst(btn);
     const c = centerOf($(".gift__art", btn));
-    later(() => fx.confetti({ x: c.x, y: c.y - 20, count: 46, spread: 0.7, power: 0.85 }), 520);
+    const v = visit;
+    later(() => { if (v === visit) fx.confetti({ x: c.x, y: c.y - 20, count: 46, spread: 0.7, power: 0.85 }); }, 520);
     later(() => {
+      if (v !== visit) { btn.classList.remove("is-unwrapping"); return; } // she already went elsewhere
+      const detour = target !== "memories" && !state.quizDone;
+      if (detour) { go(target); return; } // the quiz comes first; this gift stays wrapped for later
       btn.classList.remove("is-unwrapping");
       markGiftOpened(target);
       go(target);
@@ -485,10 +521,12 @@
       img.alt = photo.alt || "";
       if (photo.width && photo.height) { img.width = photo.width; img.height = photo.height; }
     }
-    $(".polaroid__caption", fig).textContent = p.caption || "";
+    $(".polaroid__caption", fig).textContent = glue(p.caption || "");
     const openBtn = $(".polaroid__open", fig);
-    openBtn.setAttribute("aria-label", `${C.ui.enlarge}: ${p.caption || (photo && photo.alt) || ""}`);
-    openBtn.addEventListener("click", () => lightbox.open(photoGallery, i, openBtn));
+    // the button is named "Enlarge photo:" + the photo's description (its alt text)
+    $(".polaroid__open-label", fig).textContent = `${C.ui.enlarge}: `;
+    fig._item = { type: "image", src: photo && photo.src, alt: (photo && photo.alt) || "", caption: glue(p.caption || ""), width: photo && photo.width, height: photo && photo.height };
+    openBtn.addEventListener("click", () => lightbox.open(photoGallery, Math.max(0, photoGallery.indexOf(fig._item)), openBtn));
 
     const tape = $(".tape", fig);
     tape.src = i % 3 === 1 ? "assets/illustrations/washi-tape-gold.svg" : "assets/illustrations/washi-tape.svg";
@@ -498,7 +536,7 @@
     const back = $(".polaroid__face--back", fig);
     if (p.back) {
       fig.classList.add("has-back");
-      $(".polaroid__back-text", fig).textContent = p.back;
+      $(".polaroid__back-text", fig).textContent = glue(p.back);
       back.setAttribute("aria-hidden", "true");
       const flip = el("button", "polaroid__flip");
       flip.type = "button";
@@ -532,8 +570,7 @@
     if (!f) return;
     fig.classList.toggle("is-flipped", flipped);
     f.flip.setAttribute("aria-pressed", String(flipped));
-    f.label.textContent = flipped ? C.ui.turnBack : C.ui.turnOver;
-    f.flip.setAttribute("aria-label", `${flipped ? C.ui.turnBack : C.ui.turnOver}: ${f.caption}`);
+    f.label.textContent = flipped ? C.ui.turnBack : C.ui.turnOver; // the name stays put; aria-pressed carries the state
     f.back.setAttribute("aria-hidden", String(!flipped));
     f.front.setAttribute("aria-hidden", String(flipped));
     f.openBtn.tabIndex = flipped ? -1 : 0;
@@ -541,10 +578,6 @@
   }
   function buildScrapbook() {
     polaroids = C.memories.polaroids.map(buildPolaroid);
-    photoGallery = C.memories.polaroids.map((p) => {
-      const ph = C.photos[p.photo] || {};
-      return { type: "image", src: ph.src, alt: ph.alt || "", caption: p.caption || "", width: ph.width, height: ph.height };
-    });
     layoutScrapbook(true);
     window.matchMedia("(min-width: 761px)").addEventListener("change", () => layoutScrapbook(false));
   }
@@ -553,6 +586,7 @@
     if (!force && n === scrapCols) return;
     scrapCols = n;
     const book = $("#scrapbook");
+    const restore = book.contains(document.activeElement) ? document.activeElement : null;
     const cols = Array.from({ length: n }, () => el("div", "scrapbook__col"));
     const heights = new Array(n).fill(0);
     heights[1] = 0.35; // the middle column starts a little lower
@@ -563,6 +597,9 @@
       heights[k] += parseFloat(fig.dataset.ratio || "1.33") + 0.35;
     });
     book.replaceChildren(...cols);
+    // Previous/Next in the lightbox follows the same order as Tab does
+    photoGallery = $$(".polaroid--scrap", book).map((f) => f._item);
+    if (restore) restore.focus({ preventScroll: true });
   }
 
   /* video reel */
@@ -571,22 +608,25 @@
     const videos = (C.videos || []).filter((v) => v && v.src);
     if (!videos.length) { $("#reel").hidden = true; return; }
     const strip = $("#reel-strip");
-    videoGallery = videos.map((v) => ({ type: "video", src: v.src, poster: v.poster, caption: v.caption || "", width: v.width, height: v.height }));
+    videoGallery = videos.map((v) => ({ type: "video", src: v.src, poster: v.poster, caption: glue(v.caption || ""), width: v.width, height: v.height }));
     videos.forEach((v, i) => {
       const item = el("div");
       item.setAttribute("role", "listitem");
       const b = el("button", "clip");
       b.type = "button";
       b.setAttribute("aria-label", `${C.ui.playClip}: ${v.caption || ""}`);
+      // the thumbnail's own shape decides the clip's width (see .clip in styles.css)
+      const pw = v.posterWidth || v.width, ph = v.posterHeight || v.height;
+      if (pw && ph) b.style.setProperty("--ar", (pw / ph).toFixed(4));
       const frame = el("span", "clip__frame");
       const img = el("img");
       img.src = v.poster || "";
       img.alt = "";
       img.loading = "lazy";
       img.decoding = "async";
-      if (v.width && v.height) { img.width = v.width; img.height = v.height; }
+      if (pw && ph) { img.width = pw; img.height = ph; }
       frame.append(img, el("span", "clip__play"));
-      const cap = el("span", "clip__caption", v.caption || "");
+      const cap = el("span", "clip__caption", glue(v.caption || ""));
       b.append(frame, cap);
       b.addEventListener("click", () => lightbox.open(videoGallery, i, b));
       item.appendChild(b);
@@ -603,12 +643,21 @@
     const prevBtn = $("#lightbox-prev");
     const nextBtn = $("#lightbox-next");
     const fig = $(".lightbox__polaroid", dlg);
-    let list = [], index = 0, trigger = null, touchX = null;
+    const status = $("#lightbox-status");
+    let list = [], index = 0, trigger = null, touchX = null, openedAt = 0;
 
+    /* stop and release a clip completely, so it stops downloading too */
+    const unloadVideos = () => media.querySelectorAll("video").forEach((v) => {
+      v.pause();
+      v.removeAttribute("src");
+      v.load();
+    });
     function render(dir) {
       const item = list[index];
-      media.querySelectorAll("video").forEach((v) => v.pause());
+      const hadFocus = media.contains(document.activeElement);
+      unloadVideos();
       media.replaceChildren();
+      let focusable = null;
       if (item.type === "video") {
         const v = el("video");
         v.src = item.src;
@@ -616,9 +665,11 @@
         v.controls = true;
         v.playsInline = true;
         v.setAttribute("playsinline", "");
+        v.setAttribute("aria-label", item.caption || C.ui.playClip);
         v.preload = "auto";
         if (item.width && item.height) { v.width = item.width; v.height = item.height; }
         media.appendChild(v);
+        focusable = v;
         const p = v.play();
         if (p && p.catch) p.catch(() => {});
       } else {
@@ -630,7 +681,9 @@
       }
       caption.textContent = item.caption || "";
       count.textContent = list.length > 1 ? `${index + 1} / ${list.length}` : "";
+      status.textContent = list.length > 1 ? `${index + 1} of ${list.length}: ${item.caption || ""}` : item.caption || "";
       prevBtn.hidden = nextBtn.hidden = list.length < 2;
+      if (hadFocus) (focusable || nextBtn).focus({ preventScroll: true });
       if (dir && !reduced()) {
         fig.style.setProperty("--swap-from", dir > 0 ? "28px" : "-28px");
         fig.classList.remove("is-swapping");
@@ -641,7 +694,7 @@
     function open(items, i, from) {
       list = items; index = i; trigger = from || null;
       render(0);
-      if (!dlg.open) dlg.showModal();
+      if (!dlg.open) { dlg.showModal(); openedAt = performance.now(); }
       $("#lightbox-close").focus();
     }
     function move(d) {
@@ -653,8 +706,13 @@
     prevBtn.addEventListener("click", () => move(-1));
     nextBtn.addEventListener("click", () => move(1));
     $("#lightbox-close").addEventListener("click", close);
-    dlg.addEventListener("click", (e) => { if (e.target === dlg || e.target.classList.contains("lightbox__frame")) close(); });
+    dlg.addEventListener("click", (e) => {
+      // the second tap of a double-tap must not close what the first tap opened
+      if (performance.now() - openedAt < 400) return;
+      if (e.target === dlg || e.target.classList.contains("lightbox__frame")) close();
+    });
     dlg.addEventListener("keydown", (e) => {
+      if (e.target.closest && e.target.closest("video")) return; // arrows seek inside a playing clip
       if (e.key === "ArrowRight") { e.preventDefault(); move(1); }
       if (e.key === "ArrowLeft") { e.preventDefault(); move(-1); }
     });
@@ -666,8 +724,9 @@
       touchX = null;
     });
     dlg.addEventListener("close", () => {
-      media.querySelectorAll("video").forEach((v) => v.pause());
+      unloadVideos();
       media.replaceChildren();
+      status.textContent = "";
       if (trigger && isShown(trigger)) trigger.focus({ preventScroll: true });
       trigger = null;
     });
@@ -687,7 +746,7 @@
     const yes = btn.dataset.answer === "yes";
     $$(".answer").forEach((b) => b.classList.toggle("is-chosen", b === btn));
     const res = $("#quiz-response");
-    res.textContent = yes ? C.fun.responseYes : C.fun.responseThink;
+    res.textContent = glue(yes ? C.fun.responseYes : C.fun.responseThink);
     res.classList.remove("is-popping");
     void res.offsetWidth;
     res.classList.add("is-popping");
@@ -697,12 +756,13 @@
     }
     if (!state.quizDone) {
       state.quizDone = true;
-      later(showCertificate, 1500);
+      const v = visit;
+      later(() => { if (v === visit) showCertificate(); }, 2000);
     }
   }
   function setContinueLabel() {
     const target = state.afterFun || (state.wished ? "letter" : "cake");
-    $("#fun-continue").textContent = target === "letter" ? C.fun.continueLetter : C.fun.continue;
+    $("#fun-continue").textContent = glue(target === "letter" ? C.fun.continueLetter : C.fun.continue);
   }
   function showCertificate() {
     const wrap = $("#certificate-wrap");
@@ -710,13 +770,17 @@
     wrap.hidden = false;
     if (reduced()) { $("#certificate-title").focus({ preventScroll: false }); return; }
     wrap.classList.add("is-arriving");
-    wrap.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
+    // scroll so the punchline stays just below the top bar, with the certificate under it
+    const res = $("#quiz-response");
+    const y = res.getBoundingClientRect().top + window.scrollY - ($("#topbar").offsetHeight + 12);
+    window.scrollTo({ top: Math.max(0, y), behavior: scrollBehavior() });
+    const v = visit;
     later(() => {
-      const stamp = $(".secret--stamp", wrap);
-      const c = centerOf(stamp);
+      if (v !== visit) return;
+      const c = centerOf($(".secret--stamp", wrap));
       fx.confetti({ x: c.x, y: c.y, count: 60, spread: 0.9, power: 0.9 });
     }, 1250);
-    later(() => $("#certificate-title").focus({ preventScroll: true }), 900);
+    later(() => { if (v === visit) $("#certificate-title").focus({ preventScroll: true }); }, 900);
     later(() => wrap.classList.remove("is-arriving"), 2200);
   }
   function enterFun() {
@@ -746,20 +810,23 @@
     $("#blow-candles").addEventListener("click", blowAll);
   }
   function candleGroup(n) { return $(`#cake .candle[data-candle="${n}"]`); }
+  /* candles use aria-disabled rather than disabled, so keyboard focus never drops to the page */
   function blowCandle(n) {
     if (state.candlesOut.has(n) || state.wished) return;
     state.candlesOut.add(n);
     const g = candleGroup(n);
     if (g) g.classList.add("is-out");
     const btn = $(`.candle-btn[data-candle="${n}"]`);
-    if (btn) { btn.disabled = true; btn.setAttribute("aria-label", `Candle ${n + 1} is out`); }
+    if (btn) { btn.setAttribute("aria-disabled", "true"); btn.setAttribute("aria-label", `Candle ${n + 1} is out`); }
     if (state.candlesOut.size >= 4) {
-      $("#blow-candles").disabled = true;
+      $("#blow-candles").setAttribute("aria-disabled", "true");
       later(finishWish, 900);
     }
   }
   function blowAll() {
-    $("#blow-candles").disabled = true;
+    const b = $("#blow-candles");
+    if (b.getAttribute("aria-disabled") === "true") return;
+    b.setAttribute("aria-disabled", "true");
     const remaining = [0, 1, 2, 3].filter((n) => !state.candlesOut.has(n));
     remaining.forEach((n, k) => later(() => blowCandle(n), k * 150));
   }
@@ -771,15 +838,17 @@
     $(".cake-scene").classList.add("is-wished");
     const wish = $("#wish");
     wish.hidden = false;
+    if (state.screen !== "cake") return; // she left before the last candle went out: no fanfare off-screen
     if (!reduced()) wish.classList.add("is-arriving");
     fx.rain({ count: 120 });
     const cake = centerOf($("#cake"));
     fx.confetti({ x: cake.x, y: cake.y - 60, count: 50, spread: 0.8, power: 0.8 });
+    const v = visit;
     later(() => {
+      if (v !== visit) return;
       wish.scrollIntoView({ behavior: scrollBehavior(), block: "center" });
-      $("#wish-text").focus({ preventScroll: true });
+      $("#wish-text").focus({ preventScroll: true }); // focus reads the wish to screen readers
     }, 350);
-    announce(C.cake.wish);
   }
   function enterCake() {
     markGiftOpened("cake");
@@ -789,10 +858,10 @@
     state.candlesOut = new Set();
     $$("#cake .candle").forEach((g) => g.classList.remove("is-out"));
     $$(".candle-btn").forEach((b) => {
-      b.disabled = false;
+      b.removeAttribute("aria-disabled");
       b.setAttribute("aria-label", `Blow out candle ${Number(b.dataset.candle) + 1}`);
     });
-    $("#blow-candles").disabled = false;
+    $("#blow-candles").removeAttribute("aria-disabled");
     $("#cake-actions").hidden = false;
     $(".cake-scene").classList.remove("is-wished");
     const wish = $("#wish");
@@ -805,7 +874,7 @@
     const body = $("#letter-body");
     const paras = C.letter.paragraphs || [];
     paras.forEach((t, i) => {
-      const p = el("p", null, t);
+      const p = el("p", null, glue(t));
       if (i === 0) p.classList.add("is-greeting");
       else if (i === paras.length - 1) p.classList.add("is-closing");
       else if (C.dialogue && t.indexOf(C.dialogue) !== -1) p.classList.add("is-aside");
@@ -825,9 +894,11 @@
     }
     env.hidden = false;
     letterParts().forEach((n) => { n.hidden = true; });
-    scene.classList.remove("is-unfolding");
-    later(() => scene.classList.add("is-opening"), 450);
+    scene.classList.remove("is-opening", "is-unfolding");
+    const v = visit;
+    later(() => { if (v === visit) scene.classList.add("is-opening"); }, 450);
     later(() => {
+      if (v !== visit) return;
       scene.classList.remove("is-opening");
       env.hidden = true;
       letterParts().forEach((n) => { n.hidden = false; });
@@ -837,6 +908,10 @@
       $("#letter-title").focus({ preventScroll: true });
       later(() => scene.classList.remove("is-unfolding"), 1200);
     }, 2150);
+  }
+  /* leaving before the envelope finished opening re-arms it for next time */
+  function leaveLetter() {
+    if (!state.letterOpened) resetLetter();
   }
   function resetLetter() {
     const scene = $("#letter-scene");
@@ -919,7 +994,7 @@
     });
     if (state.screen === "final") {
       // rebuilt mid-finale (e.g. a tablet was rotated): keep what was already showing visible
-      if (state.finalPlayed || reduced()) showFinalNow();
+      if (state.finalPlayed) showFinalNow();
       else {
         $$("#garland-a .garland__photo").forEach((p) => p.classList.add("is-hung"));
         if (b.classList.contains("is-shown")) $$("#garland-b .garland__photo").forEach((p) => p.classList.add("is-hung"));
@@ -929,72 +1004,89 @@
   function buildFinal() {
     const host = $("#final-lines");
     (C.final.lines || []).forEach((t, i, arr) => {
-      const p = el("p", "final__line", t);
+      const p = el("p", "final__line", glue(t));
       if (i === arr.length - 1) p.classList.add("is-family");
       host.appendChild(p);
     });
     buildGarlands(true);
     window.matchMedia("(min-width: 700px)").addEventListener("change", () => buildGarlands(false));
+    // a tap anywhere (or Escape / Enter / Space) skips to the end of the finale
     $("#screen-final").addEventListener("click", (e) => {
       if (state.finalRunning && !e.target.closest("button")) skipFinal();
     });
+    document.addEventListener("keydown", (e) => {
+      if (state.screen !== "final" || !state.finalRunning || document.querySelector("dialog[open]")) return;
+      if (e.key === "Escape" || ((e.key === "Enter" || e.key === " ") && !e.target.closest("button, a"))) {
+        e.preventDefault();
+        skipFinal();
+      }
+    });
   }
   function hang(photos, startMs) {
-    photos.forEach((p, i) => later(() => p.classList.add("is-hung"), startMs + i * 170));
+    photos.forEach((p, i) => laterFinal(() => p.classList.add("is-hung"), startMs + i * 170));
   }
   function revealNear(node) {
     const r = node.getBoundingClientRect();
     if (r.bottom > window.innerHeight - 24) node.scrollIntoView({ behavior: scrollBehavior(), block: "center" });
+  }
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  function setDusk(on) {
+    document.body.classList.toggle("is-dusk", on);
+    if (themeMeta) themeMeta.setAttribute("content", on ? "#2A1612" : "#F6ECDA");
   }
   function showFinalNow() {
     $$("#screen-final .garland__photo").forEach((p) => p.classList.add("is-hung"));
     $$(".final__line").forEach((l) => l.classList.add("is-shown"));
     ["#final-wish", "#final-bubble", "#final-actions", "#garland-b"].forEach((s) => $(s).classList.add("is-shown"));
   }
+  /* The finale keeps its pacing even with reduced motion: there it fades
+     line by line instead of moving. */
   function enterFinal() {
-    document.body.classList.add("is-dusk");
-    if (state.finalPlayed || reduced()) {
+    setDusk(true);
+    if (state.finalPlayed) {
       showFinalNow();
-      state.finalPlayed = true;
       return;
     }
     state.finalRunning = true;
     hang($$("#garland-a .garland__photo"), 500);
     const lines = $$(".final__line");
     const start = 1500, gap = 1500;
-    lines.forEach((l, i) => later(() => { l.classList.add("is-shown"); revealNear(l); }, start + i * gap));
+    lines.forEach((l, i) => laterFinal(() => { l.classList.add("is-shown"); revealNear(l); }, start + i * gap));
     const afterLines = start + lines.length * gap + 500;
-    later(() => { $("#final-wish").classList.add("is-shown"); revealNear($("#final-wish")); }, afterLines);
-    later(() => {
-      const gb = $("#garland-b");
-      gb.classList.add("is-shown");
-      hang($$("#garland-b .garland__photo"), 0);
-    }, afterLines + 1300);
-    later(() => {
+    laterFinal(() => { $("#final-wish").classList.add("is-shown"); revealNear($("#final-wish")); }, afterLines);
+    laterFinal(() => { // after a short pause, the joke
       const bubble = $("#final-bubble");
       bubble.classList.add("is-shown");
       revealNear(bubble);
       fx.stars({ count: 36 });
       fx.rain({ count: 140 });
-    }, afterLines + 3200);
-    later(() => {
-      $("#final-actions").classList.add("is-shown");
+    }, afterLines + 2400);
+    laterFinal(() => { // the second string of photos, where she can see it hang
+      const gb = $("#garland-b");
+      gb.classList.add("is-shown");
+      revealNear(gb);
+      hang($$("#garland-b .garland__photo"), 200);
+    }, afterLines + 3800);
+    laterFinal(() => {
+      const actions = $("#final-actions");
+      actions.classList.add("is-shown");
+      actions.scrollIntoView({ behavior: scrollBehavior(), block: "end" });
       state.finalRunning = false;
       state.finalPlayed = true;
-    }, afterLines + 4600);
+    }, afterLines + 5600);
   }
   function skipFinal() {
-    clearTimers();
+    clearFinalTimers();
     showFinalNow();
     state.finalRunning = false;
     state.finalPlayed = true;
   }
   function leaveFinal() {
-    document.body.classList.remove("is-dusk");
+    setDusk(false);
     if (state.finalRunning) skipFinal();
   }
   function resetFinal() {
-    document.body.classList.remove("is-dusk");
+    setDusk(false);
     $$("#screen-final .garland__photo").forEach((p) => p.classList.remove("is-hung"));
     $$(".final__line").forEach((l) => l.classList.remove("is-shown"));
     ["#final-wish", "#final-bubble", "#final-actions", "#garland-b"].forEach((s) => $(s).classList.remove("is-shown"));
@@ -1037,9 +1129,14 @@
     }
     openNote(s, trigger, isNew);
   }
-  function openDialog(dlg, trigger) {
+  /* Open a dialog at its top, with focus on its first words so screen
+     readers read the note itself. */
+  function openDialog(dlg, trigger, focusTarget) {
     dlg._trigger = trigger || document.activeElement;
     if (!dlg.open) dlg.showModal();
+    dlg._openedAt = performance.now();
+    dlg.scrollTop = 0;
+    if (focusTarget) focusTarget.focus({ preventScroll: true });
   }
   function openNote(s, trigger, celebrate) {
     const dlg = $("#note-dialog");
@@ -1047,26 +1144,32 @@
     const img = $("#note-photo");
     const fig = img.closest("figure");
     if (s.photo && C.photos[s.photo]) { setPhoto(img, s.photo); fig.hidden = false; } else { fig.hidden = true; }
-    $("#note-text").textContent = s.note;
+    $("#note-text").textContent = glue(s.note);
     noteTrigger = trigger || null;
-    openDialog(dlg, trigger);
+    openDialog(dlg, trigger, $("#note-text"));
     if (celebrate) {
       fx.attach(dlg);
       later(() => fx.confetti({ x: window.innerWidth / 2, y: window.innerHeight * 0.3, count: 40, spread: 0.8, power: 0.7 }), 380);
     }
-    announce(`${fmt(C.secrets.noteLabel, { n: s.id })}. ${s.note}`);
   }
-  function openBonus() {
+  function openBonus(trigger) {
     const dlg = $("#bonus-dialog");
     const host = $("#bonus-lines");
     host.replaceChildren(...C.secrets.bonus.lines.map((t, i) => {
-      const p = el("p", null, t);
-      if (i === 0) p.id = "bonus-line-0";
+      const p = el("p", null, glue(t));
+      p.id = `bonus-line-${i}`;
       return p;
     }));
-    openDialog(dlg, $("#hint-btn"));
+    dlg.setAttribute("aria-describedby", C.secrets.bonus.lines.slice(1).map((_, i) => `bonus-line-${i + 1}`).join(" "));
+    openDialog(dlg, trigger || $("#hint-btn"), host);
     fx.attach(dlg);
     later(() => { fx.rain({ count: 120 }); fx.stars({ count: 20 }); }, 400);
+  }
+  /* what (if anything) has to happen before a secret can be reached */
+  function secretLock(s) {
+    if (!state.opened && s.where !== "opening") return "open";
+    if (!state.quizDone && ["fun", "cake", "letter"].includes(s.where)) return "quiz";
+    return "";
   }
   function openHints(trigger) {
     const dlg = $("#hints-dialog");
@@ -1076,38 +1179,53 @@
     list.replaceChildren();
     C.secrets.items.forEach((s) => {
       const isFound = state.secrets.has(s.id);
+      const lock = isFound ? "" : secretLock(s);
       const li = el("li", `hint${isFound ? " is-found" : ""}`);
       const mark = el("span", "hint__mark", isFound ? "✓" : "✦");
       mark.setAttribute("aria-hidden", "true");
-      const locked = s.id === 3 && !state.quizDone && !isFound;
-      const text = el("p", "hint__text", locked && s.lockedHint ? `${s.hint} ${s.lockedHint}` : s.hint);
+      const lockText = lock === "open" ? C.secrets.lockedOpen : lock === "quiz" ? C.secrets.lockedQuiz : "";
+      const text = el("p", "hint__text", glue(lockText ? `${lockText} ${s.hint}` : s.hint));
       const status = el("span", "sr-only", isFound ? " (found)" : " (not found yet)");
       text.appendChild(status);
-      const action = el("button", "hint__action", isFound ? C.secrets.readAgain : C.secrets.takeMeThere);
+      const label = isFound ? C.secrets.readAgain
+        : lock === "open" ? C.secrets.takeMeToEnvelope
+        : lock === "quiz" ? C.secrets.takeMeToQuestion
+        : C.secrets.takeMeThere;
+      const action = el("button", "hint__action", label);
       action.type = "button";
+      action.setAttribute("aria-label", `${label}: ${s.label}`);
       action.addEventListener("click", () => {
         dlg.close();
         if (isFound) openNote(s, $("#hint-btn"), false);
-        else takeMeThere(s);
+        else takeMeThere(s, lock);
       });
       li.append(mark, text, action);
       list.appendChild(li);
     });
     $("#hints-bonus").hidden = found < TOTAL_SECRETS;
-    openDialog(dlg, trigger);
+    openDialog(dlg, trigger, $("#hints-intro"));
   }
-  function takeMeThere(s) {
-    go(s.where);
+  function highlight(btn) {
+    btn.scrollIntoView({ behavior: scrollBehavior(), block: "center" });
+    btn.classList.remove("is-highlighted");
+    void btn.offsetWidth;
+    btn.classList.add("is-highlighted");
+    btn.focus({ preventScroll: true });
+    later(() => btn.classList.remove("is-highlighted"), 3200);
+  }
+  function takeMeThere(s, lock) {
+    if (lock === "open") { // the envelope comes first
+      go("opening");
+      later(() => highlight($("#open-envelope")), 350);
+      return;
+    }
+    go(lock === "quiz" ? "fun" : s.where);
+    if (lock === "quiz") return; // the question is right at the top of that screen
     const wait = s.where === "letter" && !state.letterOpened ? 2500 : 650;
     later(() => {
+      // (navigation happens via the hash, after this call, so check visibility rather than `visit`)
       const btn = $(`.secret[data-secret="${s.id}"]`);
-      if (!btn || !isShown(btn)) return;
-      btn.scrollIntoView({ behavior: scrollBehavior(), block: "center" });
-      btn.classList.remove("is-highlighted");
-      void btn.offsetWidth;
-      btn.classList.add("is-highlighted");
-      btn.focus({ preventScroll: true });
-      later(() => btn.classList.remove("is-highlighted"), 3200);
+      if (btn && isShown(btn) && state.screen === s.where) highlight(btn);
     }, wait);
   }
   function resetSecrets() {
@@ -1121,7 +1239,10 @@
     $$("dialog").forEach((dlg) => {
       $$("[data-close]", dlg).forEach((b) => b.addEventListener("click", () => dlg.close()));
       if (dlg.id !== "lightbox") {
-        dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+        dlg.addEventListener("click", (e) => {
+          // a tap outside the card closes it, but not the second tap of a double-tap
+          if (e.target === dlg && performance.now() - (dlg._openedAt || 0) >= 400) dlg.close();
+        });
       }
       dlg.addEventListener("close", () => {
         fx.detach();
@@ -1129,7 +1250,7 @@
         dlg._trigger = null;
         if (dlg.id === "note-dialog" && state.secrets.size >= TOTAL_SECRETS && !state.bonusShown) {
           state.bonusShown = true;
-          later(openBonus, 250);
+          later(() => openBonus(t), 250); // afterwards focus returns to the secret that finished the set
           return;
         }
         if (t && isShown(t) && dlg.id !== "lightbox") t.focus({ preventScroll: true });
@@ -1138,7 +1259,7 @@
     $("#hint-btn").addEventListener("click", (e) => openHints(e.currentTarget));
     $("#hints-bonus").addEventListener("click", () => {
       $("#hints-dialog").close();
-      later(openBonus, 150);
+      later(() => openBonus(), 150);
     });
   }
   function closeAllDialogs() {
@@ -1228,11 +1349,23 @@
     initMusic();
     wire();
     resetLetter();
-    // Always begin with the sealed envelope, whatever the address bar says.
+    // Always begin with the sealed envelope, whatever the address bar says,
+    // and drop a leftover #section so Back never jumps into the middle.
+    try { if (location.hash) history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* sandboxed frames may refuse */ }
     $$(".screen").forEach((s) => { s.hidden = s.id !== "screen-opening"; });
     state.screen = "opening";
     document.body.dataset.screen = "opening";
     updateTopbar();
+    // the top bar's room depends on the fonts and the screen size
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTopbar);
+    let fitQueued = false;
+    const refit = () => {
+      if (fitQueued) return;
+      fitQueued = true;
+      window.requestAnimationFrame(() => { fitQueued = false; fitTopbar(); });
+    };
+    window.addEventListener("resize", refit);
+    if (window.ResizeObserver) new ResizeObserver(refit).observe($("#secrets-tag"));
     document.documentElement.classList.add("is-ready");
   }
 
